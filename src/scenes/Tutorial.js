@@ -1,182 +1,43 @@
 /**
- * Gravi en el Vacío — Piso 0: Tutorial (Dominio del Movimiento y Posición)
- * Construido con generación procedural de tramos y validado por física.
+ * Gravi en el Vacío — Tutorial (Tutorial_Level de Unity)
+ * Moverse, saltar, agacharse bajo la estructura y empujar la caja al botón (PlataformaBoton.cs)
+ * para activar la plataforma que sube y baja; después el portal lleva a 0-Transition.
  */
 
-import { CONFIG } from '../config.js';
-import { createRNG } from '../procgen/rng.js';
-import { GeneradorPiso0 } from '../procgen/niveles.js';
-import { MegaestructuraBackground } from '../procgen/megaestructura.js';
-import { Gravi } from '../game/Gravi.js';
-import { NewRobot } from '../game/New.js';
-import { Caja } from '../game/Caja.js';
-import { Boton } from '../game/Boton.js';
-import { Portal } from '../game/Portal.js';
-import { DIALOGOS } from '../data/dialogos.js';
+import { NivelBase } from './NivelBase.js';
+import { Caja, Plataforma, toca } from '../game/Objetos.js';
+import { Escenario } from '../game/Escenario.js';
 import { telemetria } from '../services/telemetria.js';
 
-export class TutorialScene extends Phaser.Scene {
+// Clips de "imagen_2025-06-24_204937500-removebg-preview.controller": dañado (en espera) y subirybajar (activada)
+const DANADO = [[0, 20.6465, -0.08], [1.37, 21.35, -0.08], [2.9, 20.31, -0.08], [4.3, 20.6465, -0.08]];
+const SUBIR_Y_BAJAR = [[0, 20.6465, -0.12], [1.52, 20.6465, 2.7], [3.02, 20.6465, -0.12]];
+
+export class TutorialScene extends NivelBase {
   constructor() {
-    super({ key: 'Tutorial' });
+    super('Tutorial', 'tutorial', { ortho: 3, salto: 4 });
   }
 
-  create() {
-    this.tiempoInicio = this.time.now;
-    telemetria.registrarEvento('INICIO_NIVEL', 'Tutorial', { piso: 0, concepto: 'Posición' });
+  crearNivel() {
+    const caja = this.esc.grupo('Box-1-Tutoriallevel');
+    this.caja = new Caja(this, this.esc, caja, this.jugador);
+    this.plataforma = new Plataforma(this, this.esc, this.esc.grupo(/^Plataforma/), this.jugador, DANADO);
+    this.physics.add.collider(this.caja.zona, this.plataforma.zona);
 
-    // 1. Generación Procedural del Nivel
-    this.rng = createRNG();
-    const generador = new GeneradorPiso0(this.rng);
-    const nivelData = generador.generar();
-
-    // Límites del mundo de física
-    this.physics.world.setBounds(0, 0, nivelData.anchoMundoPx, nivelData.altoMundoPx);
-
-    // 2. Fondo Procedural en Capas (Megaestructura con paralaje)
-    this.fondo = new MegaestructuraBackground(this, this.rng, nivelData.anchoMundoPx, nivelData.altoMundoPx);
-
-    // 3. Construcción del Tilemap a partir de la matriz de tramos
-    const map = this.make.tilemap({
-      data: nivelData.datosMapa,
-      tileWidth: CONFIG.TILE_SIZE,
-      tileHeight: CONFIG.TILE_SIZE
-    });
-
-    const tileset = map.addTilesetImage('estructura', 'estructura', CONFIG.TILE_SIZE, CONFIG.TILE_SIZE, 0, 0);
-    this.capaSuelo = map.createLayer(0, tileset, 0, 0);
-    this.capaSuelo.setCollisionByExclusion([-1]);
-
-    // 4. Entidades del juego
-    const { puntosClave } = nivelData;
-
-    // Robot Mentor (New)
-    this.newRobot = new NewRobot(this, puntosClave.posicionNew.x, puntosClave.posicionNew.y);
-
-    // Sensor de Coordenada (Botón)
-    this.boton = new Boton(this, puntosClave.boton.x, puntosClave.boton.y, 1.2);
-
-    // Caja Empujable
-    this.caja = new Caja(this, puntosClave.caja.x, puntosClave.caja.y);
-
-    // Portal de Salida
-    this.portal = new Portal(this, puntosClave.portal.x, puntosClave.portal.y);
-
-    // Gravi (Personaje Jugador)
-    this.gravi = new Gravi(this, puntosClave.spawnGravi.x, puntosClave.spawnGravi.y);
-
-    // 5. Colisiones físicas
-    this.physics.add.collider(this.gravi, this.capaSuelo);
-    this.physics.add.collider(this.caja, this.capaSuelo);
-
-    // Interacción de empuje entre Gravi y la Caja
-    this.physics.add.collider(this.gravi, this.caja, (gravi, caja) => {
-      const dirX = Math.sign(caja.x - gravi.x);
-      const isPushInput = (dirX > 0 && (gravi.cursors.right.isDown || gravi.keys.d.isDown)) ||
-                          (dirX < 0 && (gravi.cursors.left.isDown || gravi.keys.a.isDown));
-
-      if (isPushInput) {
-        gravi.isPushing = true;
-        caja.body.setVelocityX(dirX * CONFIG.PHYSICS.PUSH_SPEED);
-      } else {
-        gravi.isPushing = false;
-      }
-    });
-
-    // 6. Cámara cinemática que sigue a Gravi
-    this.cameras.main.setBounds(0, 0, nivelData.anchoMundoPx, nivelData.altoMundoPx);
-    this.cameras.main.startFollow(this.gravi, true, 0.08, 0.08);
-    this.cameras.main.setDeadzone(80, 40);
-
-    // 7. Iniciar Escena de Interfaz (HUD) en paralelo
-    this.scene.launch('HUD');
-    this.hud = this.scene.get('HUD');
-
-    // 8. Música de Nivel
-    this.musicaNivel = this.sound.add('musica-niveles', {
-      volume: CONFIG.AUDIO.DEFAULT_MUSIC_VOLUME,
-      loop: true
-    });
-    this.musicaNivel.play();
-
-    // 9. Diálogo inicial de New
-    this.time.delayedCall(1200, () => {
-      this.reproducirDialogoInicial();
-    });
-
-    // Estado del nivel
-    this.nivelCompletado = false;
-    this.haEntradoEnTriggerDeTutorial = false;
+    const zb = this.esc.zonas(/(^|\/)boton$/)[0];
+    this.zonaBoton = zb ? Escenario.rect(zb) : null;
+    this.botonActivado = false;
   }
 
-  reproducirDialogoInicial() {
-    const d1 = DIALOGOS['voz-new-escenatutorial-leveldialogo1'];
-    if (this.hud && d1) {
-      this.hud.mostrarSubtitulo(d1.personaje, d1.texto, 8000, 'new-portrait');
+  actualizarNivel(_t, delta) {
+    this.caja.update();
+    this.plataforma.update(delta);
+    if (!this.botonActivado && this.zonaBoton && toca(this.caja.body, this.zonaBoton)) {
+      this.botonActivado = true;
+      this.sound.play('sfx-boton', { volume: 0.8 });
+      this.caja.fijar();
+      this.plataforma.setClaves(SUBIR_Y_BAJAR);
+      telemetria.registrarEvento('CAJA_EN_BOTON', 'Tutorial', { segundos: this.segundos() });
     }
-
-    if (this.sound.get('voz-new-escenatutorial-leveldialogo1')) {
-      this.sound.play('voz-new-escenatutorial-leveldialogo1', {
-        volume: CONFIG.AUDIO.DEFAULT_VOICE_VOLUME
-      });
-    }
-  }
-
-  update(time, delta) {
-    if (this.gravi) {
-      this.gravi.update(time, delta);
-    }
-    if (this.newRobot) {
-      this.newRobot.update();
-    }
-
-    // Comprobar si la caja está sobre el botón (sensor de coordenadas)
-    if (!this.boton.estaActivo && this.caja) {
-      const distCajaBoton = Math.abs(this.caja.x - this.boton.x);
-      if (distCajaBoton < 30) {
-        this.boton.activar();
-        this.portal.desbloquear();
-        telemetria.registrarEvento('CAJA_EN_SENSOR', 'Tutorial', {
-          posicionCajaX: this.caja.getMetrosX(),
-          posicionBotonX: (this.boton.x / CONFIG.TILE_SIZE).toFixed(1)
-        });
-
-        if (this.hud) {
-          this.hud.mostrarSubtitulo('New', '¡Excelente! Has situado la masa en la coordenada exacta. El portal está abierto.', 6000, 'new-portrait');
-        }
-      }
-    }
-
-    // Comprobar si Gravi llega al portal desbloqueado
-    if (this.portal.desbloqueado && !this.nivelCompletado) {
-      const distGraviPortal = Phaser.Math.Distance.Between(this.gravi.x, this.gravi.y, this.portal.x, this.portal.y);
-      if (distGraviPortal < 50) {
-        this.completarPiso();
-      }
-    }
-  }
-
-  completarPiso() {
-    this.nivelCompletado = true;
-    const tiempoTotalSeg = ((this.time.now - this.tiempoInicio) / 1000).toFixed(1);
-
-    telemetria.registrarEvento('COMPLETADO_NIVEL', 'Tutorial', {
-      piso: 0,
-      tiempoTotalSeg,
-      concepto: 'Posición y Movimiento'
-    });
-
-    localStorage.setItem(CONFIG.STORAGE.LAST_COMPLETED_FLOOR, '0');
-
-    if (this.hud) {
-      this.hud.mostrarSubtitulo('Compás', `¡Piso 0 completado en ${tiempoTotalSeg} s! Ascendiendo a la siguiente sección...`, 4000, 'gravi-portrait');
-    }
-
-    this.cameras.main.fade(1200, 7, 8, 14, false, (camera, progress) => {
-      if (progress === 1) {
-        this.sound.stopAll();
-        this.scene.stop('HUD');
-        this.scene.start('Menu');
-      }
-    });
   }
 }

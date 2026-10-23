@@ -86,8 +86,9 @@ export class PrivacidadScene extends Phaser.Scene {
     btnBg.on('pointerout', () => btnBg.setFillStyle(0x3fe0f0));
     btnBg.on('pointerdown', () => {
       localStorage.setItem(CONFIG.STORAGE.PRIVACY_ACCEPTED, '1');
+      localStorage.removeItem(CONFIG.STORAGE.SOLO_LOCAL);
       telemetria.registrarEvento('CONSENTIMIENTO_ACEPTADO', 'Privacidad');
-      this.scene.start('Menu');
+      this.scene.start('Prologo');
     });
 
     // Botón Solo Modo Local (sin telemetría en la nube)
@@ -106,7 +107,8 @@ export class PrivacidadScene extends Phaser.Scene {
     btnLocalBg.on('pointerout', () => btnLocalBg.setFillStyle(0x1f2438));
     btnLocalBg.on('pointerdown', () => {
       localStorage.setItem(CONFIG.STORAGE.PRIVACY_ACCEPTED, '1');
-      this.scene.start('Menu');
+      localStorage.setItem(CONFIG.STORAGE.SOLO_LOCAL, '1');
+      this.scene.start('Prologo');
     });
   }
 }

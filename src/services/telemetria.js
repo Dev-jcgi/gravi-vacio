@@ -77,6 +77,12 @@ class TelemetriaService {
   async flush() {
     if (this.isFlushing || this.colaEventos.length === 0) return;
     if (!isFirebaseAvailable()) return;
+    // "Jugar solo en local": los eventos se quedan en este navegador
+    try {
+      if (localStorage.getItem(CONFIG.STORAGE.SOLO_LOCAL) === '1') return;
+    } catch {
+      return;
+    }
 
     this.isFlushing = true;
     const db = getDb();

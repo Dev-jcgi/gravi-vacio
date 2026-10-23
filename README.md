@@ -1,67 +1,86 @@
 # Gravi en el Vacío — Versión Web (Phaser 3.90)
 
-Videojuego educativo y serio de física clásica (Cinemática / MRU: $v = d / t$) desarrollado para la tesis universitaria de UNISUR.
+Juego serio de cinemática (tiempo, distancia y velocidad: $v = d / t$) para la tesis de UNISUR.
+La versión web **reproduce el juego de Unity** (`E:\jc-gi\Gravi_Claude\Assets`): mismos escenarios,
+personajes, textos, voces, tiempos y mecánicas. Los escenarios no se dibujan a mano: se exportan
+de las escenas `.unity` con las herramientas de `tools/`.
 
-## Stack Tecnológico
-* **Motor:** Phaser 3.90.0 (HTML5 Canvas / WebGL)
+## Stack
+* **Motor:** Phaser 3.90.0 (WebGL, física Arcade)
 * **Empaquetador:** Vite 8
-* **Backend y Métricas:** Firebase 13 (Firestore anónimo)
+* **Métricas:** Firebase 13 (Firestore anónimo; modo "solo local" disponible)
 * **Despliegue:** GitHub Actions + GitHub Pages
 
-## Comandos de Desarrollo
+## Comandos
 
 ```bash
-# Instalar dependencias (desde Publicacion/juego)
 npm install
+npm run dev        # servidor de desarrollo
+npm run build      # compila en dist/
+npm run preview    # prueba la compilación
 
-# Iniciar servidor de desarrollo en local (http://localhost:3000)
-npm run dev
-
-# Compilar para producción (carpeta dist/)
-npm run build
-
-# Probar compilación de producción localmente
-npm run preview
+# Regenerar los escenarios desde Unity (Python 3 con PyYAML y Pillow; solo lee el proyecto Unity)
+python tools/exportar_unity.py
+# Regenerar hojas de Gravi, música, voces, efectos y fuente (requiere ffmpeg)
+python tools/build_assets.py
 ```
 
-## Arquitectura de la Etapa 1
+## Recorrido (igual que Build Settings de Unity)
+
+| Web | Unity | Contenido |
+|---|---|---|
+| `Privacidad` | — | Aviso de privacidad (obligatorio la primera vez) |
+| `Prologo` | 1-Prologue | Narración del abuelo I.N. (Narratives.prefab) |
+| `Menu` | MainMenu | Ilustración de Gravi y la luna; jugar, elegir nivel, prólogo, créditos |
+| `Tutorial` | Tutorial_Level | Moverse, saltar, agacharse, empujar la caja al botón, plataforma y portal |
+| `Transicion0` | 0-Transition | Gravi y el diario del abuelo |
+| `Tiempo` | Time_Level 1 | Rompecabezas 4 × 4 del retrato del abuelo, 70 s (`Puzzle.tiempoLimite`) |
+| `Transicion1` | 1-Transition | "El diario habla de fórmulas…" |
+| `Distancia` | Distance_Level | Tres caminos de cajas de 10 m, contador "Distancia: N mts.", vista general de 16 s, teletransporte a los 40 s |
+| `Transicion3` | 3-Transition | "Encontré otra entrada en su diario…" |
+| `Velocidad` | Speed_Level | Retos 12 m / 2 s, 40 m / 5 s y 140 m / 10 s con ítems que cambian el salto |
+| `Transicion4` | 4-Transition | "Entiendo ahora…" |
+| `PreFinal` | PreFinal | Gravi sale del portal y sube al ascensor |
+| `Final` | Final_Level | Ascensor, recuerdos de tiempo, distancia y velocidad, voces finales, "Continuará…" |
+| `Aula` | AulaEducativo | Repaso con los paneles de Unity y las cuatro voces del aula |
+| `Fin` | (ExitGame) | Cierre y regreso al menú |
+
+## Arquitectura
+
 ```
 juego/
-├── index.html                   # Contenedor responsive 16:9 y tema oscuro
-├── vite.config.js               # Configuración base relativa ('./')
-├── package.json                 # Scripts y dependencias
-├── firestore.rules              # Reglas de seguridad éticas de Firestore
-├── PRIVACIDAD.md                # Declaración de minimización y protección de datos
-├── public/
-│   └── assets/                  # Spritesheets, audios en MP3, tiles y manifest.json
+├── tools/
+│   ├── unity_scene.py      # aplana una escena .unity con prefabs anidados (sprites, colisiones, scripts)
+│   ├── exportar_unity.py   # escribe public/assets/unity/{escenas,tex} e indice.json
+│   ├── unity_anim.py       # resume AnimationClips (tiempos de textos e intros)
+│   ├── unity_timeline.py   # resume Timelines (escenas finales)
+│   └── build_assets.py     # hojas de Gravi, audio, efectos y fuente
+├── public/assets/
+│   ├── unity/              # escenas exportadas + atlas de texturas (≈ 6 MB)
+│   ├── sprites/            # animaciones de Gravi (64 px = 0.64 u)
+│   ├── audio/              # música, voces y efectos de Unity
+│   └── fonts/              # Press Start 2P (fuente del juego Unity)
 └── src/
-    ├── main.js                  # Punto de entrada y configuración de Phaser
-    ├── config.js                # Parámetros físicos (1 tile = 1 metro) y constantes
-    ├── data/
-    │   └── dialogos.js          # Subtítulos y transcripción de diálogos
-    ├── services/
-    │   ├── firebase.js          # Inicialización perezosa y auth anónima
-    │   └── telemetria.js        # Cola de eventos pedagógicos hacia Firestore/localStorage
-    ├── procgen/
-    │   ├── rng.js               # PRNG Mulberry32 determinista con semilla
-    │   ├── megaestructura.js    # Fondo procedural en capas con paralaje
-    │   └── niveles.js           # Generador de tramos del Piso 0 y agente validador
+    ├── config.js           # 1 u de Unity = 100 px; física de PlayerMovement.cs
+    ├── data/secuencias.js  # textos y tiempos de prólogo, transiciones e intros (de los AnimationClips)
     ├── game/
-    │   ├── Gravi.js             # Controlador: caminar, correr, salto variable, coyote time, agachar y empujar
-    │   ├── Caja.js              # Objeto físico con masa y arrastre
-    │   ├── Boton.js             # Sensor de presión con coordenada x en metros
-    │   ├── Portal.js            # Puerta de transición entre pisos
-    │   └── New.js               # Robot mentor con animación flotante
-    └── scenes/
-        ├── Boot.js              # Precarga de assets y creación de animaciones
-        ├── Privacidad.js        # Pantalla obligatoria de consentimiento ético
-        ├── Menu.js              # Menú principal y créditos
-        ├── Prologo.js           # Narrativa del abuelo I.N. con subtítulos y audio
-        ├── Tutorial.js          # Piso 0: Dominio del movimiento y coordenada de posición
-        └── HUD.js               # Compás con lectura en metros, regla Q y menú de pausa
+    │   ├── Escenario.js    # construye una escena exportada (sprites, grupos, sólidos)
+    │   ├── Gravi.js        # controlador (Unity + correr, salto variable, coyote time, buffer)
+    │   ├── Objetos.js      # cajas empujables y plataformas animadas
+    │   ├── Portal.js       # portal de dos zonas (Portal.cs)
+    │   └── UI.js           # paneles, diálogos (Animacion.cs) y textos narrativos
+    ├── scenes/             # Boot, Privacidad, Secuencia, Menu, NivelBase, Tutorial, Tiempo,
+    │                       # Distancia, Velocidad, Finales, Pausa
+    └── services/           # Firebase y telemetría anónima
 ```
 
-## Próximos Pasos (Etapa 2)
-* **Piso 1 (Tiempo):** Compuertas periódicas de los Tejedores y acertijo del retrato en 70 s.
-* **Piso 2 (Distancia):** Comparación de tres trayectorias A $\to$ B y medición de longitud.
-* **Piso 3 (Velocidad):** Sincronización con plataformas móviles mediante la fórmula $v = d / t$.
+`src/dev/pruebas.js` solo sirve para pruebas en desarrollo (no se incluye en la compilación).
+
+## Telemetría (anónima)
+Eventos por escena: inicio y fin, diálogos, caídas, caja en el botón, rompecabezas (segundos, piezas,
+movimientos, completo o tiempo agotado), camino elegido y metros en Distancia, teletransportes,
+ítem elegido en Velocidad (correcto, salto, intento) y juego completado.
+
+## Música
+Las pistas de *Hollow Knight* se mantienen por ahora en un solo punto (`CONFIG.AUDIO.TRACKS`).
+No deben publicarse en abierto sin reemplazarlas.

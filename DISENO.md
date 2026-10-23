@@ -1,5 +1,9 @@
 # Gravi en el Vacío — Diseño de la versión web
 
+> **Nota (23-oct-2026):** este diseño procedural quedó en desuso. Por decisión del usuario, la versión web
+> ahora reproduce el juego de Unity (escenarios exportados de las escenas `.unity`, mismos textos y mecánicas).
+> Ver `README.md`. Este documento se conserva como referencia.
+
 Documento de diseño de la versión HTML5 (Phaser 3). Parte del GDD v2 (`Gravi_Guion-GDD_v2.docx`) y lo amplía con un universo propio, mecánicas rediseñadas y generación procedural.
 
 ---

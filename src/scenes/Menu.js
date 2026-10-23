@@ -1,9 +1,21 @@
 /**
- * Gravi en el Vacío — Menú Principal
+ * Gravi en el Vacío — Menú principal (MainMenu de Unity)
+ * Ilustración de IlustrationMainMenu (torres, luna, Gravi de espaldas y franja de azules)
+ * que aparece poco a poco con el título "Gravi en el Vacio" y el piano de apertura.
  */
 
 import { CONFIG } from '../config.js';
+import { estilo, boton, panel } from '../game/UI.js';
 import { telemetria } from '../services/telemetria.js';
+
+const NIVELES = [
+  ['TUTORIAL', 'Tutorial'],
+  ['NIVEL 1 · TIEMPO', 'Transicion0'],
+  ['NIVEL 2 · DISTANCIA', 'Transicion1'],
+  ['NIVEL 3 · VELOCIDAD', 'Transicion3'],
+  ['FINAL', 'Transicion4'],
+  ['AULA EDUCATIVA', 'Aula']
+];
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
@@ -11,163 +23,84 @@ export class MenuScene extends Phaser.Scene {
   }
 
   create() {
-    const { width, height } = this.cameras.main;
+    const { width, height } = this.scale;
+    this.cameras.main.setBackgroundColor('#000000');
+    telemetria.registrarEvento('INICIO_ESCENA', 'Menu');
 
-    // Fondo del menú
-    this.add.image(width / 2, height / 2, 'fondo1')
-      .setDisplaySize(width, height)
-      .setTint(0x383452);
-
-    // Partículas de polvo y óxido flotando
-    const particles = this.add.particles(0, 0, 'gravi-portrait', {
-      x: { min: 0, max: width },
-      y: { min: 0, max: height },
-      scale: { start: 0.02, end: 0.05 },
-      alpha: { start: 0.4, end: 0 },
-      speedY: { min: -10, max: -30 },
-      speedX: { min: -5, max: 5 },
-      lifespan: 4000,
-      frequency: 200,
-      blendMode: 'ADD'
-    });
-    particles.setAlpha(0.3);
-
-    // Música de ambiente
-    if (!this.sound.get('musica-prologo') && !this.sound.get('musica-niveles')) {
-      this.sound.play('musica-prologo', {
-        volume: CONFIG.AUDIO.DEFAULT_MUSIC_VOLUME,
-        loop: true
-      });
+    if (!this.sound.get(CONFIG.AUDIO.TRACKS.PROLOGUE)?.isPlaying) {
+      this.sound.stopAll();
+      this.sound.play(CONFIG.AUDIO.TRACKS.PROLOGUE, { volume: CONFIG.AUDIO.DEFAULT_MUSIC_VOLUME, loop: true });
     }
 
-    // Título Principal
-    this.add.text(width / 2, 140, 'GRAVI EN EL VACÍO', {
-      fontFamily: 'monospace',
-      fontSize: '44px',
-      fontStyle: 'bold',
-      color: '#3fe0f0',
-      stroke: '#07080e',
-      strokeThickness: 6
-    }).setOrigin(0.5);
+    // Ilustración (capas de 800×600 de Scenes/2-Menu), con los tintes de Unity
+    const ilus = this.add.container(width * 0.33, height / 2 + 10);
+    const torres = [
+      this.add.image(-330, -40, 'environment-cyberpunk2-background-background1', 'background1').setScale(0.55, 1.2).setTint(0x2b2a2a),
+      this.add.image(300, -10, 'environment-cyberpunk2-background-background2', 'background2_0').setScale(0.45, 0.95).setTint(0x483939)
+    ];
+    const franja = this.add.image(0, 0, '2-menu-paleta-de-azules', 'Paleta_de_azules').setScale(3, 1.2);
+    const luna = this.add.image(0, -20, '2-menu-luz', 'Luz').setScale(1.08);
+    const gravi = this.add.image(0, 0, '2-menu-character', 'Character').setScale(1.2).setTint(0x4e5173);
+    ilus.add([...torres, franja, luna, gravi]);
+    for (const o of ilus.list) {
+      const a = o === gravi ? 1 : o === luna ? 0.9 : 0.97;
+      o.setAlpha(0);
+      this.tweens.add({ targets: o, alpha: a, duration: 3000, ease: 'Sine.easeIn' });
+    }
+    this.tweens.add({ targets: gravi, y: -6, duration: 3200, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
 
-    this.add.text(width / 2, 195, 'FÍSICA Y CINEMÁTICA EN LA MEGAESTRUCTURA', {
-      fontFamily: 'sans-serif',
-      fontSize: '15px',
-      letterSpacing: 4,
-      color: '#c65cff'
-    }).setOrigin(0.5);
+    // Título y botones (MainMenuUI: botones CRT con la fuente Press Start 2P)
+    const x = width * 0.76;
+    const titulo = this.add.text(x, 150, 'Gravi en el Vacío', estilo(30, '#ffffff', { align: 'center' })).setOrigin(0.5).setAlpha(0);
+    this.tweens.add({ targets: titulo, alpha: 1, duration: 2500, delay: 600 });
 
-    // Ilustración de Gravi pequeña en el menú
-    this.add.sprite(width / 2, 270, 'gravi-idle').setScale(1.5).play('gravi-idle-anim');
+    this.principal = this.add.container(0, 0).setAlpha(0);
+    this.principal.add([
+      boton(this, x, 300, 'JUGAR', () => this.ir('Tutorial', 'CLICK_JUGAR')),
+      boton(this, x, 360, 'ELEGIR NIVEL', () => this.mostrar(this.niveles)),
+      boton(this, x, 420, 'VER PRÓLOGO', () => this.ir('Prologo', 'CLICK_PROLOGO')),
+      boton(this, x, 480, 'CRÉDITOS', () => this.mostrar(this.creditos))
+    ]);
+    this.tweens.add({ targets: this.principal, alpha: 1, duration: 1200, delay: 1600 });
 
-    // Botones del Menú
-    const startY = 360;
-    const spacing = 58;
+    this.niveles = this.add.container(0, 0).setVisible(false);
+    this.niveles.add(panel(this, x, 390, 470, 470));
+    this.niveles.add(this.add.text(x, 190, 'ELEGIR NIVEL', estilo(16, '#3fd8e0')).setOrigin(0.5));
+    NIVELES.forEach(([n, k], i) => this.niveles.add(boton(this, x, 250 + i * 50, n, () => this.ir(k, 'CLICK_NIVEL', { nivel: k }), 14)));
+    this.niveles.add(boton(this, x, 570, '← VOLVER', () => this.mostrar(this.principal), 12));
 
-    this.crearBoton(width / 2, startY, 'JUGAR PRÓLOGO', () => {
-      this.sound.stopAll();
-      telemetria.registrarEvento('CLICK_JUGAR_PROLOGO', 'Menu');
-      this.scene.start('Prologo');
-    });
-
-    this.crearBoton(width / 2, startY + spacing, 'PISO 0: TUTORIAL', () => {
-      this.sound.stopAll();
-      telemetria.registrarEvento('CLICK_TUTORIAL', 'Menu');
-      this.scene.start('Tutorial');
-    });
-
-    this.crearBoton(width / 2, startY + spacing * 2, 'CRÉDITOS', () => {
-      this.mostrarCreditos();
-    });
-
-    // Pie de página
-    this.add.text(width / 2, height - 30, 'Serious Games UNISUR · Versión Web 1.0 (Phaser 3.90)', {
-      fontFamily: 'monospace',
-      fontSize: '12px',
-      color: '#65607e'
-    }).setOrigin(0.5);
-  }
-
-  crearBoton(x, y, texto, onClick) {
-    const contenedor = this.add.container(x, y);
-    const bg = this.add.rectangle(0, 0, 280, 44, 0x121528)
-      .setStrokeStyle(1.5, 0x3fe0f0, 0.7)
-      .setInteractive({ useHandCursor: true });
-
-    const txt = this.add.text(0, 0, texto, {
-      fontFamily: 'monospace',
-      fontSize: '15px',
-      fontStyle: 'bold',
-      color: '#e7e4f8'
-    }).setOrigin(0.5);
-
-    contenedor.add([bg, txt]);
-
-    bg.on('pointerover', () => {
-      bg.setFillStyle(0x3fe0f0, 0.25);
-      bg.setStrokeStyle(2, 0x3fe0f0, 1);
-      txt.setColor('#3fe0f0');
-    });
-
-    bg.on('pointerout', () => {
-      bg.setFillStyle(0x121528, 1);
-      bg.setStrokeStyle(1.5, 0x3fe0f0, 0.7);
-      txt.setColor('#e7e4f8');
-    });
-
-    bg.on('pointerdown', onClick);
-
-    return contenedor;
-  }
-
-  mostrarCreditos() {
-    const { width, height } = this.cameras.main;
-    const panel = this.add.container(width / 2, height / 2);
-
-    const bgOverlay = this.add.rectangle(0, 0, width, height, 0x07080e, 0.85)
-      .setInteractive();
-    const caja = this.add.rectangle(0, 0, 600, 380, 0x111424)
-      .setStrokeStyle(2, 0xc65cff, 0.8);
-
-    const titulo = this.add.text(0, -140, 'CRÉDITOS DEL PROYECTO', {
-      fontFamily: 'monospace',
-      fontSize: '20px',
-      color: '#3fe0f0',
-      fontStyle: 'bold'
-    }).setOrigin(0.5);
-
-    const creditosTxt = [
+    this.creditos = this.add.container(0, 0).setVisible(false);
+    this.creditos.add(panel(this, x, 380, 520, 420));
+    this.creditos.add(this.add.text(x, 380, [
       'GRAVI EN EL VACÍO',
-      'Proyecto de Tesis de Grado en Serious Games',
-      'Universidad del Sur (UNISUR)',
       '',
-      '• Diseño y Programación: Equipo Gravi',
-      '• Universo y Guion: Inspirado en la estética de Tsutomu Nihei',
-      '• Motor Web: Phaser 3.90 + Vite + Firebase',
-      '• Pedagogía: Aprendizaje activo de cinemática (MRU)',
+      'Juego serio de cinemática',
+      '(tiempo, distancia y velocidad)',
       '',
-      'Agradecimiento especial a los docentes evaluadores y estudiantes.'
-    ].join('\n');
+      'Equipo Gravi',
+      'Tesis UNISUR',
+      '',
+      'Versión web: Phaser 3',
+      'Basada en el juego de Unity'
+    ], estilo(12, '#d9d9d9', { align: 'center' })).setOrigin(0.5));
+    this.creditos.add(boton(this, x, 560, '← VOLVER', () => this.mostrar(this.principal), 12));
 
-    const desc = this.add.text(0, -10, creditosTxt, {
-      fontFamily: 'sans-serif',
-      fontSize: '14px',
-      lineSpacing: 5,
-      color: '#c9c5de',
-      align: 'center'
-    }).setOrigin(0.5);
+    this.add.text(width / 2, height - 22, 'Los datos de juego son anónimos · Ver aviso de privacidad en el sitio',
+      estilo(8, '#6f6f6f')).setOrigin(0.5);
+  }
 
-    const btnCerrar = this.add.rectangle(0, 140, 140, 36, 0x3fe0f0)
-      .setInteractive({ useHandCursor: true });
-    const txtCerrar = this.add.text(0, 140, 'CERRAR', {
-      fontFamily: 'monospace',
-      fontSize: '13px',
-      fontStyle: 'bold',
-      color: '#07080e'
-    }).setOrigin(0.5);
+  mostrar(c) {
+    for (const k of [this.principal, this.niveles, this.creditos]) k.setVisible(k === c).setAlpha(1);
+  }
 
-    btnCerrar.on('pointerdown', () => panel.destroy());
-
-    panel.add([bgOverlay, caja, titulo, desc, btnCerrar, txtCerrar]);
+  ir(escena, evento, datos = {}) {
+    if (this.saliendo) return;
+    this.saliendo = true;
+    telemetria.registrarEvento(evento, 'Menu', datos);
+    this.cameras.main.fadeOut(700, 0, 0, 0);
+    this.cameras.main.once('camerafadeoutcomplete', () => {
+      this.sound.stopAll();
+      this.scene.start(escena);
+    });
   }
 }

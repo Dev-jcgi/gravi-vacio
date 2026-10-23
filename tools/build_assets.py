@@ -1,18 +1,16 @@
 """Prepara los recursos del juego web a partir del proyecto Unity.
 
 Ejecutar desde Publicacion/juego:  python tools/build_assets.py
-Copia y optimiza sprites, escenarios, música y voces en public/assets/.
+Copia las hojas de animación de Gravi, la fuente, la música, las voces y los efectos en public/assets/.
+Los escenarios y el resto de sprites salen de tools/exportar_unity.py.
 """
 import json
 import os
 import re
 import shutil
 import subprocess
-import sys
 from PIL import Image
 
-sys.path.insert(0, os.path.dirname(__file__))
-from unity_atlas import convert  # noqa: E402
 
 UNITY = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 SPR = os.path.join(UNITY, 'Assets', 'Resources', 'Sprites')
@@ -72,35 +70,8 @@ for key, rel in {
 manifest['sprites']['gravi-crouch'] = strip(os.path.join(C, '5-Agacharse/animacion_agacharse.png'), out('sprites', 'gravi-crouch.png'))
 shutil.copy(os.path.join(C, 'Design/pixil-frame-0 (1).png'), out('sprites', 'gravi-portrait.png'))
 
-# ---------- New (robot) y abuelo ----------
-manifest['sprites']['new-idle'] = strip(os.path.join(SPR, 'Robot/Idle.png'), out('sprites', 'new-idle.png'))
-shutil.copy(os.path.join(SPR, 'Abuelo/Isaac_Newton_pixelart.png'), out('sprites', 'abuelo.png'))
-im = Image.open(os.path.join(SPR, 'AI-SORA/New-2.png')).convert('RGB'); W, H = im.size
-im.crop((int(.04 * W), int(.33 * H), int(.29 * W), int(.70 * H))).resize((128, 284), Image.NEAREST).save(out('sprites', 'new-portrait.png'))
-
-# ---------- Escenario: tiles 64 px de la megaestructura ----------
-E = os.path.join(SPR, 'Environment', 'CyberPunk2')
-shutil.copy(os.path.join(E, 'Second_Layer', '1. main platforms.png'), out('tiles', 'estructura.png'))
-shutil.copy(os.path.join(E, 'Second_Layer', '2. second layer.png'), out('tiles', 'estructura-fondo.png'))
-shutil.copy(os.path.join(E, 'Front_Layer', '0. front layer.png'), out('tiles', 'cables.png'))
-convert(os.path.join(E, 'Front_Layer', '0. front layer.png'), out('tiles', 'cables.json'))
-for i in range(1, 6):
-    Image.open(os.path.join(E, 'Background', f'background{i}.png')).convert('RGB').save(out('bg', f'fondo{i}.jpg'), quality=82)
-
-# Caja y plataforma (primer recorte de cada hoja)
-for key, rel in {'caja': 'Interaction/box.png', 'plataforma': 'Interaction/platform.png'}.items():
-    src = os.path.join(SPR, rel)
-    rs = slices(src)
-    _, x, y, w, h = rs[0]
-    Image.open(src).convert('RGBA').crop((x, y, x + w, y + h)).save(out('sprites', key + '.png'), optimize=True)
-    manifest['sprites'][key] = {'w': w, 'h': h}
-
-# Íconos de conceptos
-for key, rel, box in [('icono-tiempo', 'AI-SORA/Tiempo-2.png', (.10, .04, .48, .42)),
-                      ('icono-distancia', 'AI-SORA/Distance.png', (.05, .05, .97, .21))]:
-    im = Image.open(os.path.join(SPR, rel)).convert('RGB'); W, H = im.size
-    c = im.crop((int(box[0] * W), int(box[1] * H), int(box[2] * W), int(box[3] * H)))
-    c.thumbnail((256, 256)); c.save(out('sprites', key + '.png'))
+# Escenarios, interfaz, cajas, plataformas, New y retratos: los exporta tools/exportar_unity.py
+# desde las escenas de Unity (public/assets/unity).
 
 
 # ---------- Audio (mismas pistas del juego Unity) ----------
@@ -125,6 +96,16 @@ for root, _, files in os.walk(os.path.join(AUD, 'Voices')):
         key = 'voz-' + who + '-' + re.sub(r'[^a-z0-9]+', '-', f[:-4].lower()).strip('-')
         ffmpeg(os.path.join(root, f), out('audio', 'voces', key + '.mp3'), ['-ac', '1', '-b:a', '64k'])
         manifest['audio'][key] = f'audio/voces/{key}.mp3'
+
+SFX = {'portal': 'pulse_sound_try1-89547.mp3', 'boton': 'Resources/old-radio-button-click-97549.mp3',
+       'metal': 'Resources/AudioClips/SFX/creaking-metal-28486.mp3'}
+for key, rel in SFX.items():
+    src = os.path.join(UNITY, 'Assets', rel)
+    if not os.path.exists(src):  # la ruta del crujido puede variar
+        src = next((os.path.join(r, f) for r, _, fs in os.walk(os.path.join(UNITY, 'Assets')) for f in fs if f == os.path.basename(rel)), None)
+    if src:
+        ffmpeg(src, out('audio', 'sfx', key + '.mp3'), ['-ac', '1', '-b:a', '64k'])
+shutil.copy(os.path.join(UNITY, 'Assets', 'Resources', 'Fonts', 'PressStart', 'PressStart2P.ttf'), out('fonts', 'PressStart2P.ttf'))
 
 json.dump(manifest, open(out('manifest.json'), 'w', encoding='utf-8'), indent=1, ensure_ascii=False)
 total = sum(os.path.getsize(os.path.join(r, f)) for r, _, fs in os.walk(OUT) for f in fs)

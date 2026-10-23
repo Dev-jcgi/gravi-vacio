@@ -1,34 +1,36 @@
 /**
  * Gravi en el Vacío — Configuración global del juego
- * 1 TILE = 64 px = 1 METRO (escala física unificada)
+ * Escala heredada de Unity: 1 unidad de Unity = 100 px (PPU de los tilesets).
  */
 
 export const CONFIG = {
-  // Dimensiones lógicas (16:9)
+  // Resolución lógica (16:9)
   WIDTH: 1280,
   HEIGHT: 720,
-  TILE_SIZE: 64, // 64 píxeles = 1 metro
+  PPU: 100,
 
-  // Parámetros de física arcade
+  FUENTE: '"Press Start 2P", monospace',
+
+  // Física tomada de PlayerMovement.cs y Physics2DSettings de Unity (convertida a px)
   PHYSICS: {
-    GRAVITY: 1100,
-    WALK_SPEED: 210,      // ~3.28 m/s
-    RUN_SPEED: 350,       // ~5.46 m/s
-    CROUCH_SPEED: 110,    // ~1.71 m/s
-    JUMP_VELOCITY: -530,  // Permite saltar desniveles de hasta 2.2 metros
-    VARIABLE_JUMP_CUT: 0.5,
+    GRAVITY: 981,          // 9.81 u/s²
+    WALK_SPEED: 200,       // moveSpeed = 2
+    RUN_SPEED: 320,        // Shift (solo web)
+    CROUCH_SPEED: 100,
+    // jumpForce de Unity × 100 px × factor: la cápsula de Unity "sube" bordes pequeños al rozarlos
+    // (así Gravi supera la caja de 0.88 m con un salto de 0.82 m); en Arcade se compensa con el factor
+    JUMP_FACTOR: 1.1,
+    VARIABLE_JUMP_CUT: 0.55,
     COYOTE_TIME_MS: 100,
     JUMP_BUFFER_MS: 120,
-    PUSH_SPEED: 130,
-    BOX_MASS: 2.0,
-    BOX_DRAG: 500
+    PUSH_SPEED: 120
   },
 
-  // Gestión centralizada de música y sonido (facilita reemplazo futuro de licencias)
+  // Gestión centralizada de música (facilita reemplazar las pistas con licencia)
   AUDIO: {
-    DEFAULT_MUSIC_VOLUME: 0.5,
+    DEFAULT_MUSIC_VOLUME: 0.45,
     DEFAULT_SFX_VOLUME: 0.7,
-    DEFAULT_VOICE_VOLUME: 0.9,
+    DEFAULT_VOICE_VOLUME: 1,
     TRACKS: {
       PROLOGUE: 'musica-prologo',
       LEVELS: 'musica-niveles',
@@ -41,10 +43,11 @@ export const CONFIG = {
     PRIVACY_ACCEPTED: 'gravi_privacidad_aceptada',
     TELEMETRY_BACKUP: 'gravi_telemetria_eventos',
     AUDIO_SETTINGS: 'gravi_audio_volumen',
-    LAST_COMPLETED_FLOOR: 'gravi_progreso_piso'
+    LAST_COMPLETED_FLOOR: 'gravi_progreso_piso',
+    SOLO_LOCAL: 'gravi_solo_local'
   },
 
-  // Configuración de Firebase (rellenar con credenciales de proyecto cuando se configure)
+  // Configuración de Firebase
   FIREBASE: {
     apiKey: 'AIzaSyCmlrKyYV5MgwbaujxU9BlGpvUKR3hP35g',
     authDomain: 'gravi-en-el-vacio.firebaseapp.com',
@@ -54,3 +57,7 @@ export const CONFIG = {
     appId: '1:320530106928:web:5b290e33420058b6877bf5'
   }
 };
+
+// Orden del recorrido (igual que Build Settings de Unity)
+export const RECORRIDO = ['Prologo', 'Menu', 'Tutorial', 'Transicion0', 'Tiempo', 'Transicion1', 'Distancia',
+  'Transicion3', 'Velocidad', 'Transicion4', 'PreFinal', 'Final', 'Aula'];

@@ -34,19 +34,6 @@
    "frameWidth": 41,
    "frameHeight": 64,
    "frames": 7
-  },
-  "new-idle": {
-   "frameWidth": 30,
-   "frameHeight": 34,
-   "frames": 5
-  },
-  "caja": {
-   "w": 347,
-   "h": 447
-  },
-  "plataforma": {
-   "w": 335,
-   "h": 320
   }
  },
  "audio": {
