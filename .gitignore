@@ -1,0 +1,16 @@
+# Dependencias y compilación (GitHub Actions las genera en cada despliegue)
+node_modules/
+dist/
+
+# Variables locales y registros
+.env
+.env.*
+*.log
+.firebase/
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

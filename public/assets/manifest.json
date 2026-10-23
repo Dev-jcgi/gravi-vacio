@@ -1,0 +1,91 @@
+{
+ "sprites": {
+  "gravi-idle": {
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "frames": 11
+  },
+  "gravi-idle-side": {
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "frames": 5
+  },
+  "gravi-walk": {
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "frames": 9
+  },
+  "gravi-run": {
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "frames": 7
+  },
+  "gravi-jump": {
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "frames": 15
+  },
+  "gravi-push": {
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "frames": 11
+  },
+  "gravi-crouch": {
+   "frameWidth": 41,
+   "frameHeight": 64,
+   "frames": 7
+  },
+  "new-idle": {
+   "frameWidth": 30,
+   "frameHeight": 34,
+   "frames": 5
+  },
+  "caja": {
+   "w": 347,
+   "h": 447
+  },
+  "plataforma": {
+   "w": 335,
+   "h": 320
+  }
+ },
+ "audio": {
+  "musica-niveles": "audio/musica-niveles.mp3",
+  "musica-final": "audio/musica-final.mp3",
+  "musica-prologo": "audio/musica-prologo.mp3",
+  "voz-abuelo-escenadistance-level": "audio/voces/voz-abuelo-escenadistance-level.mp3",
+  "voz-abuelo-escenafinal-level": "audio/voces/voz-abuelo-escenafinal-level.mp3",
+  "voz-abuelo-escenaprologodialogo1": "audio/voces/voz-abuelo-escenaprologodialogo1.mp3",
+  "voz-abuelo-escenaprologodialogo2": "audio/voces/voz-abuelo-escenaprologodialogo2.mp3",
+  "voz-abuelo-escenaspeed-level": "audio/voces/voz-abuelo-escenaspeed-level.mp3",
+  "voz-abuelo-escenatime-level": "audio/voces/voz-abuelo-escenatime-level.mp3",
+  "voz-aulaeducativo-dialogo1": "audio/voces/voz-aulaeducativo-dialogo1.mp3",
+  "voz-aulaeducativo-dialogo2": "audio/voces/voz-aulaeducativo-dialogo2.mp3",
+  "voz-aulaeducativo-dialogo3-1": "audio/voces/voz-aulaeducativo-dialogo3-1.mp3",
+  "voz-aulaeducativo-dialogo4": "audio/voces/voz-aulaeducativo-dialogo4.mp3",
+  "voz-gravi-escenadistanceleveldialogo1": "audio/voces/voz-gravi-escenadistanceleveldialogo1.mp3",
+  "voz-gravi-escenafinal-leveldialogo1": "audio/voces/voz-gravi-escenafinal-leveldialogo1.mp3",
+  "voz-gravi-escenaprefinaldialogo1-1": "audio/voces/voz-gravi-escenaprefinaldialogo1-1.mp3",
+  "voz-gravi-escenaprefinaldialogo1": "audio/voces/voz-gravi-escenaprefinaldialogo1.mp3",
+  "voz-gravi-escenaspeedeveldialogo1": "audio/voces/voz-gravi-escenaspeedeveldialogo1.mp3",
+  "voz-gravi-escenatime-leveldialogo1": "audio/voces/voz-gravi-escenatime-leveldialogo1.mp3",
+  "voz-gravi-escenatime-leveldialogo2": "audio/voces/voz-gravi-escenatime-leveldialogo2.mp3",
+  "voz-new-escena3-transitiondialogo1": "audio/voces/voz-new-escena3-transitiondialogo1.mp3",
+  "voz-new-escenadistanceleveldialogo1": "audio/voces/voz-new-escenadistanceleveldialogo1.mp3",
+  "voz-new-escenadistanceleveldialogo2": "audio/voces/voz-new-escenadistanceleveldialogo2.mp3",
+  "voz-new-escenadistanceleveldialogo3": "audio/voces/voz-new-escenadistanceleveldialogo3.mp3",
+  "voz-new-escenadistanceleveldialogo4": "audio/voces/voz-new-escenadistanceleveldialogo4.mp3",
+  "voz-new-escenadistanceleveldialogo5": "audio/voces/voz-new-escenadistanceleveldialogo5.mp3",
+  "voz-new-escenafinalleveldialogo1": "audio/voces/voz-new-escenafinalleveldialogo1.mp3",
+  "voz-new-escenaprefinaldialogo1": "audio/voces/voz-new-escenaprefinaldialogo1.mp3",
+  "voz-new-escenaspeedleveldialogo1": "audio/voces/voz-new-escenaspeedleveldialogo1.mp3",
+  "voz-new-escenaspeedleveldialogo2": "audio/voces/voz-new-escenaspeedleveldialogo2.mp3",
+  "voz-new-escenaspeedleveldialogo3": "audio/voces/voz-new-escenaspeedleveldialogo3.mp3",
+  "voz-new-escenatimeleveldialogo1": "audio/voces/voz-new-escenatimeleveldialogo1.mp3",
+  "voz-new-escenatimeleveldialogo2": "audio/voces/voz-new-escenatimeleveldialogo2.mp3",
+  "voz-new-escenatimeleveldialogo3": "audio/voces/voz-new-escenatimeleveldialogo3.mp3",
+  "voz-new-escenatimeleveldialogo4": "audio/voces/voz-new-escenatimeleveldialogo4.mp3",
+  "voz-new-escenatutorial-leveldialogo1": "audio/voces/voz-new-escenatutorial-leveldialogo1.mp3",
+  "voz-new-escenatutorial-leveldialogo2": "audio/voces/voz-new-escenatutorial-leveldialogo2.mp3"
+ }
+}
